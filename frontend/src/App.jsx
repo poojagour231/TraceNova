@@ -158,7 +158,7 @@ function App() {
       setCasesError('')
 
       try {
-        const response = await fetch('http://127.0.0.1:8000/cases/')
+       const response = await fetch('https://tracenova.onrender.com/cases/')
         if (!response.ok) {
           throw new Error('Unable to load cases')
         }
@@ -336,7 +336,7 @@ function App() {
     setSuccessMessage('')
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/cases/', {
+      const response = await fetch('https://tracenova.onrender.com/cases/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -408,7 +408,7 @@ function App() {
       const formData = new FormData()
       formData.append('file', selectedFile)
       const response = await fetch(
-        `http://127.0.0.1:8000/cases/${selectedCaseId}/evidence`,
+        `https://tracenova.onrender.com/cases/${selectedCaseId}/evidence`,
         {
           method: 'POST',
           body: formData,
@@ -473,7 +473,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/analysis/case/${selectedCaseId}`,
+        `https://tracenova.onrender.com/analysis/case/${selectedCaseId}`,
         { method: 'POST' }
       )
 
