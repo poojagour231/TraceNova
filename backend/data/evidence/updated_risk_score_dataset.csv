@@ -1,0 +1,9 @@
+Case_ID,Entity,Linked_Entities,Indicators,Risk_Score,Band
+CASE-1001,SIM-7001,SIM-8110:ACCT-4101 UPI-9201,rapid calls; fund hop,94,HIGH
+CASE-1002,UPI-9304,ACCT-4302 UPI-9441,rapid onward transfer,88,HIGH
+CASE-1003,ACCT-4520,UPI-9555:DEV-SYN-078,large transfer; new device,91,HIGH
+CASE-1004,SIM-7602,DEV-SYN-091:ACCT-4210,multiple failed attempts; spoofing suspect,82,HIGH
+CASE-1005,UPI-9702,ACCT-4902,unusual location login; high value transfer,79,HIGH
+CASE-1006,SIM-7811,SIM-7819 UPI-9811,repeated frequent contact; multiple hops,68,MEDIUM
+CASE-1007,ACCT-5120,UPI-9912,moderate transaction velocity,55,MEDIUM
+CASE-1008,SIM-8102,DEV-SYN-102,single low-value payment; regular user,22,LOW
