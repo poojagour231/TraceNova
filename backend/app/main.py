@@ -20,6 +20,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:5173",
         "https://tracenova-web.vercel.app",
+        "https://cyberscam.netlify.app",
 
     ],
     allow_credentials=True,
