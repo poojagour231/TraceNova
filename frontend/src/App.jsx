@@ -122,6 +122,8 @@ function App() {
   const [casesLoading, setCasesLoading] = useState(false)
   const [casesError, setCasesError] = useState('')
   const [casesLoaded, setCasesLoaded] = useState(false)
+  const [caseSearch, setCaseSearch] = useState('')
+  const [caseSort, setCaseSort] = useState('newest')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [formError, setFormError] = useState('')
@@ -142,6 +144,13 @@ function App() {
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState(null)
   const [graphZoom, setGraphZoom] = useState(1)
   const [reportExportError, setReportExportError] = useState('')
+  const [currentDateLabel] = useState(() => (
+    new Date().toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    })
+  ))
 
   const handleAuthSubmit = (event) => {
     event.preventDefault()
@@ -296,6 +305,19 @@ function App() {
   }
 
   const activeCase = getAnalysisCase(cases, selectedCaseId)
+  const visibleCases = [...cases]
+    .filter((item) => {
+      const query = caseSearch.trim().toLowerCase()
+      if (!query) return true
+      return [item.case_number, item.title, item.id]
+        .some((value) => String(value || '').toLowerCase().includes(query))
+    })
+    .sort((left, right) => {
+      if (caseSort === 'oldest') {
+        return new Date(left.created_at || 0) - new Date(right.created_at || 0)
+      }
+      return new Date(right.created_at || 0) - new Date(left.created_at || 0)
+    })
   const backendStatus = casesError
     ? 'Backend unavailable'
     : casesLoaded
@@ -361,10 +383,14 @@ function App() {
         throw new Error(message)
       }
 
-      await response.json()
+      const createdCase = await response.json()
       setForm({ case_number: '', title: '', description: '' })
       setShowCreateForm(false)
       setSuccessMessage('Case created successfully.')
+      if (createdCase?.case_id) {
+        setSelectedCaseId(String(createdCase.case_id))
+        setActiveNav('Evidence')
+      }
       setCasesLoaded(false)
       await loadCases()
     } catch (error) {
@@ -551,7 +577,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
+      <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark" aria-hidden="true">
             <span />
@@ -588,7 +614,12 @@ function App() {
           <span className={`backend-badge ${casesError ? 'offline' : ''}`}><span className="status-pulse" /> {backendStatus}</span>
           <button className="signout-button" type="button" onClick={() => { setIsAuthenticated(false); setEntryScreen('landing') }}>Sign out</button>
         </div>
-      </header>
+        <div className="sidebar-footer">
+          <span className="sidebar-footer-dot" />
+          <span>Workspace protected</span>
+          <span className="sidebar-footer-code">TN / 01</span>
+        </div>
+      </aside>
 
       <main className="main-content">
         <header className="topbar">
@@ -597,9 +628,45 @@ function App() {
             <h1>{activeNav}</h1>
             {activeCase && <p className="topbar-case">Active case: {activeCase.case_number || `Case ${activeCase.id}`} — {activeCase.title || 'Untitled case'}</p>}
           </div>
+          <div className="topbar-actions">
+            <span className="topbar-date">{currentDateLabel}</span>
+            <button className="topbar-refresh" type="button" onClick={loadCases} disabled={casesLoading} aria-label="Refresh cases">↻</button>
+          </div>
         </header>
 
         <div className="content">
+          <section className="investigation-stepper" aria-label="Investigation workflow">
+            {[
+              ['01', 'Create case', 'Dashboard'],
+              ['02', 'Add evidence', 'Evidence'],
+              ['03', 'Run analysis', 'Analysis'],
+              ['04', 'Review results', 'Analysis'],
+              ['05', 'Generate report', 'Reports'],
+            ].map(([number, label, destination], index) => {
+              const stepActive = activeNav === destination || (index === 0 && activeNav === 'Cases')
+              const stepComplete = index === 0 && selectedCaseId
+                ? true
+                : index === 1 && uploadResult
+                  ? true
+                  : index === 2 && analysisResult
+                    ? true
+                    : index === 3 && analysisResult
+                      ? true
+                      : false
+              return (
+                <button
+                  className={`workflow-step ${stepActive ? 'active' : ''} ${stepComplete ? 'complete' : ''}`}
+                  key={number}
+                  type="button"
+                  onClick={() => handleNavigation(destination)}
+                >
+                  <span className="workflow-step-number">{stepComplete ? '✓' : number}</span>
+                  <span>{label}</span>
+                  {index < 4 && <i aria-hidden="true">→</i>}
+                </button>
+              )
+            })}
+          </section>
           {activeNav === 'Cases' ? (
             <section className="cases-view">
               <section className="welcome-row">
@@ -623,6 +690,24 @@ function App() {
                   </div>
                   <span className="live-label"><span /> GET /cases/</span>
                 </div>
+                {!casesLoading && !casesError && cases.length > 0 && (
+                  <div className="case-filters">
+                    <label className="search-field">
+                      <span aria-hidden="true">⌕</span>
+                      <input
+                        value={caseSearch}
+                        onChange={(event) => setCaseSearch(event.target.value)}
+                        placeholder="Search case number, title, or ID"
+                        aria-label="Search cases"
+                      />
+                    </label>
+                    <select value={caseSort} onChange={(event) => setCaseSort(event.target.value)} aria-label="Sort cases">
+                      <option value="newest">Newest first</option>
+                      <option value="oldest">Oldest first</option>
+                    </select>
+                    <span className="filter-note">Risk filters unlock when risk metadata is returned by the API.</span>
+                  </div>
+                )}
                 {casesLoading && <div className="cases-message">Loading cases...</div>}
                 {!casesLoading && casesError && <div className="cases-message error-message">{casesError}</div>}
                 {!casesLoading && !casesError && cases.length === 0 && (
@@ -641,7 +726,7 @@ function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {cases.map((item) => (
+                        {visibleCases.map((item) => (
                           <tr key={item.id}>
                             <td><strong>{item.case_number || '—'}</strong></td>
                             <td><strong>{item.title || '—'}</strong></td>
@@ -661,6 +746,9 @@ function App() {
                             </td>
                           </tr>
                         ))}
+                        {visibleCases.length === 0 && (
+                          <tr><td colSpan="5" className="dashboard-empty-row">No cases match this search.</td></tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
