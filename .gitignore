@@ -44,3 +44,5 @@ outputs/
 *.joblib
 *.pkl
 *.pickle
+!backend/ml/model/
+!backend/ml/model/*.joblib
