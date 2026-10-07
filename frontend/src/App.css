@@ -322,6 +322,67 @@ h1 { margin: 7px 0 0; color: var(--text); font-size: 18px; letter-spacing: -.3px
   .auth-shell { display: block; }.auth-hero { min-height: 360px; padding: 28px 25px; }.auth-hero-content { margin: 70px 0 35px; }.auth-hero-content h1 { font-size: 48px; letter-spacing: -2px; }.auth-hero-stats { gap: 18px; margin-top: 28px; }.auth-card-wrap { padding: 24px 16px; }.auth-card { padding: 28px 22px; }.auth-footer { display: none; }
 }
 
+/* Investigation workspace visual system */
+:root {
+  --canvas: #050b16;
+  --sidebar: #07101e;
+  --panel: #0c1728;
+  --panel-raised: #10213a;
+  --line: rgba(83, 145, 214, .2);
+  --line-strong: rgba(72, 160, 239, .42);
+  --text: #edf5ff;
+  --muted: #91a6c0;
+  --faint: #66809f;
+  --blue: #2e8cff;
+  --cyan: #5bd9ff;
+  --green: #62d7ad;
+}
+
+.app-shell {
+  background: radial-gradient(circle at 70% -10%, rgba(23, 90, 166, .18), transparent 38%), var(--canvas);
+}
+
+.sidebar {
+  background: rgba(5, 13, 27, .96);
+  border-right-color: rgba(46, 140, 255, .25);
+}
+
+.nav-item.active {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(46, 140, 255, .24), rgba(46, 140, 255, .05));
+  box-shadow: inset 3px 0 0 var(--blue), 0 0 22px rgba(46, 140, 255, .08);
+}
+
+.nav-item.active::before { background: var(--blue); box-shadow: 0 0 12px rgba(46, 140, 255, .8); }
+.nav-icon, .brand strong span, .section-kicker, .eyebrow, .case-id { color: var(--blue); }
+.brand-mark { border-color: rgba(46, 140, 255, .55); background: rgba(46, 140, 255, .12); }
+.brand-mark span { background: var(--blue); }
+.primary-button { color: #fff; background: var(--blue); box-shadow: 0 8px 24px rgba(46, 140, 255, .24); }
+.primary-button:hover, .secondary-button:hover { box-shadow: 0 10px 28px rgba(46, 140, 255, .34); }
+.secondary-button { border-color: rgba(46, 140, 255, .45); color: #cfe5ff; }
+.overview-card, .panel { background: linear-gradient(145deg, rgba(14, 31, 54, .96), rgba(8, 19, 35, .96)); border-color: rgba(72, 160, 239, .2); }
+.overview-card:hover, .panel:hover { border-color: rgba(72, 160, 239, .55); box-shadow: 0 0 26px rgba(46, 140, 255, .1); }
+.workflow-step.active, .workflow-step.complete { color: #fff; border-color: var(--blue); }
+.workflow-step.active .workflow-step-number, .workflow-step.complete .workflow-step-number { color: #fff; background: var(--blue); }
+.workflow-step.complete { border-top-color: var(--blue); }
+.backend-badge { color: var(--green); border-color: rgba(98, 215, 173, .3); }
+.cases-message, .empty-state { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cases-message strong { color: var(--text); }
+.retry-button { margin-left: auto; }
+.continue-banner { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 20px; padding: 20px 24px; border-color: rgba(46, 140, 255, .45); }
+.continue-banner h3 { margin: 5px 0; }
+.continue-banner p:last-child { margin: 0; color: var(--muted); }
+.continue-banner p span { color: var(--blue); }
+.table-action { border: 0; color: var(--cyan); background: transparent; cursor: pointer; font-size: 11px; font-weight: 700; }
+.table-action:hover { color: #fff; text-decoration: underline; }
+.upload-panel, .analysis-panel { border-top: 2px solid var(--blue); }
+.selected-file { color: var(--cyan); }
+
+@media (max-width: 760px) {
+  .continue-banner { align-items: flex-start; flex-direction: column; }
+  .continue-banner .primary-button { width: 100%; }
+}
+
 /* Authenticated workspace hierarchy */
 .app-shell {
   background: #080b10;

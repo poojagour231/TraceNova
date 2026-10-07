@@ -10,6 +10,8 @@ const navigation = [
   { label: 'Reports', icon: '▤' },
 ]
 
+const SELECTED_CASE_STORAGE_KEY = 'tracenova.selectedCaseId'
+
 const createGraphLayout = (graph) => {
   const nodes = Array.isArray(graph?.nodes) ? graph.nodes : []
   const edges = Array.isArray(graph?.edges) ? graph.edges : []
@@ -133,7 +135,13 @@ function App() {
     title: '',
     description: '',
   })
-  const [selectedCaseId, setSelectedCaseId] = useState('')
+  const [selectedCaseId, setSelectedCaseId] = useState(() => {
+    try {
+      return window.localStorage.getItem(SELECTED_CASE_STORAGE_KEY) || ''
+    } catch {
+      return ''
+    }
+  })
   const [selectedFile, setSelectedFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
@@ -173,7 +181,21 @@ function App() {
         }
 
         const data = await response.json()
-        setCases(Array.isArray(data) ? data : [])
+        const nextCases = Array.isArray(data) ? data : []
+        setCases(nextCases)
+        setSelectedCaseId((currentCaseId) => {
+          if (currentCaseId && nextCases.some((item) => String(item.id) === String(currentCaseId))) {
+            return currentCaseId
+          }
+          try {
+            const rememberedCaseId = window.localStorage.getItem(SELECTED_CASE_STORAGE_KEY)
+            return rememberedCaseId && nextCases.some((item) => String(item.id) === rememberedCaseId)
+              ? rememberedCaseId
+              : ''
+          } catch {
+            return ''
+          }
+        })
         setCasesLoaded(true)
       } catch {
         setCasesError('Unable to load cases. Make sure the backend server is running.')
@@ -188,6 +210,18 @@ function App() {
     }, 0)
     return () => window.clearTimeout(task)
   }, [loadCases])
+
+  useEffect(() => {
+    try {
+      if (selectedCaseId) {
+        window.localStorage.setItem(SELECTED_CASE_STORAGE_KEY, String(selectedCaseId))
+      } else {
+        window.localStorage.removeItem(SELECTED_CASE_STORAGE_KEY)
+      }
+    } catch {
+      // Ignore storage restrictions without affecting the active backend case.
+    }
+  }, [selectedCaseId])
 
   if (!isAuthenticated && entryScreen === 'landing') {
     return (
@@ -304,6 +338,13 @@ function App() {
     }
   }
 
+  const openInvestigation = (caseId) => {
+    setSelectedCaseId(String(caseId))
+    setUploadError('')
+    setAnalysisError('')
+    setActiveNav('Evidence')
+  }
+
   const activeCase = getAnalysisCase(cases, selectedCaseId)
   const visibleCases = [...cases]
     .filter((item) => {
@@ -388,8 +429,7 @@ function App() {
       setShowCreateForm(false)
       setSuccessMessage('Case created successfully.')
       if (createdCase?.case_id) {
-        setSelectedCaseId(String(createdCase.case_id))
-        setActiveNav('Evidence')
+        openInvestigation(createdCase.case_id)
       }
       setCasesLoaded(false)
       await loadCases()
@@ -709,9 +749,19 @@ function App() {
                   </div>
                 )}
                 {casesLoading && <div className="cases-message">Loading cases...</div>}
-                {!casesLoading && casesError && <div className="cases-message error-message">{casesError}</div>}
+                {!casesLoading && casesError && (
+                  <div className="cases-message error-message">
+                    <strong>Backend unavailable</strong>
+                    <span>{casesError}</span>
+                    <button className="secondary-button retry-button" type="button" onClick={loadCases}>Retry</button>
+                  </div>
+                )}
                 {!casesLoading && !casesError && cases.length === 0 && (
-                  <div className="cases-message">No cases found.</div>
+                  <div className="cases-message empty-state">
+                    <strong>No investigations yet</strong>
+                    <span>Create a case to begin a real investigation workspace.</span>
+                    <button className="primary-button" type="button" onClick={handleCreateCase}>Create New Case</button>
+                  </div>
                 )}
                 {!casesLoading && !casesError && cases.length > 0 && (
                   <div className="case-table-wrap">
@@ -736,12 +786,9 @@ function App() {
                               <button
                                 className="table-action"
                                 type="button"
-                                onClick={() => {
-                                  setSelectedCaseId(String(item.id))
-                                  handleNavigation('Analysis')
-                                }}
+                                onClick={() => openInvestigation(item.id)}
                               >
-                                Open analysis
+                                Open Investigation
                               </button>
                             </td>
                           </tr>
@@ -777,10 +824,18 @@ function App() {
                 </div>
                 {casesLoading && <div className="cases-message">Loading cases...</div>}
                 {!casesLoading && casesError && (
-                  <div className="cases-message error-message">{casesError}</div>
+                  <div className="cases-message error-message">
+                    <strong>Backend waking up / unavailable</strong>
+                    <span>{casesError}</span>
+                    <button className="secondary-button retry-button" type="button" onClick={loadCases}>Retry</button>
+                  </div>
                 )}
                 {!casesLoading && !casesError && cases.length === 0 && (
-                  <div className="cases-message">No cases found. Create a case before uploading evidence.</div>
+                  <div className="cases-message empty-state">
+                    <strong>No selected investigation</strong>
+                    <span>Create or open a case before uploading evidence.</span>
+                    <button className="primary-button" type="button" onClick={handleCreateCase}>Create New Case</button>
+                  </div>
                 )}
                 {!casesLoading && !casesError && cases.length > 0 && (
                   <form className="upload-form" onSubmit={handleEvidenceSubmit}>
@@ -865,10 +920,18 @@ function App() {
                 </div>
                 {casesLoading && <div className="cases-message">Loading cases...</div>}
                 {!casesLoading && casesError && (
-                  <div className="cases-message error-message">{casesError}</div>
+                  <div className="cases-message error-message">
+                    <strong>Backend waking up / unavailable</strong>
+                    <span>{casesError}</span>
+                    <button className="secondary-button retry-button" type="button" onClick={loadCases}>Retry</button>
+                  </div>
                 )}
                 {!casesLoading && !casesError && cases.length === 0 && (
-                  <div className="cases-message">No cases found.</div>
+                  <div className="cases-message empty-state">
+                    <strong>No investigations yet</strong>
+                    <span>Create a case before running analysis.</span>
+                    <button className="primary-button" type="button" onClick={handleCreateCase}>Create New Case</button>
+                  </div>
                 )}
                 {!casesLoading && !casesError && cases.length > 0 && (
                   <form className="analysis-form" onSubmit={handleAnalysisSubmit}>
@@ -1295,6 +1358,18 @@ function App() {
               <span>＋</span> Create Case
             </button>
           </section>
+          {activeCase && (
+            <section className="continue-banner panel">
+              <div>
+                <p className="section-kicker">Last selected investigation</p>
+                <h3>{activeCase.case_number || `Case ${activeCase.id}`}</h3>
+                <p>{activeCase.title || 'Untitled case'} <span>•</span> ID {activeCase.id}</p>
+              </div>
+              <button className="primary-button" type="button" onClick={() => openInvestigation(activeCase.id)}>
+                Continue Last Investigation <span>→</span>
+              </button>
+            </section>
+          )}
 
           <section className="overview-grid" aria-label="Dashboard overview">
             {[
@@ -1339,18 +1414,20 @@ function App() {
                       <th>Title</th>
                       <th>Status</th>
                       <th>Last updated</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {!casesLoaded && casesLoading && <tr><td colSpan="4" className="dashboard-empty-row">Loading cases...</td></tr>}
-                    {!casesLoading && casesError && <tr><td colSpan="4" className="dashboard-empty-row error-message">{casesError}</td></tr>}
-                    {!casesLoading && !casesError && cases.length === 0 && <tr><td colSpan="4" className="dashboard-empty-row">No cases found.</td></tr>}
+                    {!casesLoaded && casesLoading && <tr><td colSpan="5" className="dashboard-empty-row">Loading cases...</td></tr>}
+                    {!casesLoading && casesError && <tr><td colSpan="5" className="dashboard-empty-row error-message">{casesError} <button className="table-action" type="button" onClick={loadCases}>Retry</button></td></tr>}
+                    {!casesLoading && !casesError && cases.length === 0 && <tr><td colSpan="5" className="dashboard-empty-row">No cases found. <button className="table-action" type="button" onClick={handleCreateCase}>Create New Case</button></td></tr>}
                     {!casesLoading && !casesError && cases.slice(0, 5).map((item) => (
                       <tr key={item.id}>
                         <td><span className="case-id">{item.case_number || `CASE-${item.id}`}</span><small>ID {item.id}</small></td>
                         <td><strong>{item.title || '—'}</strong></td>
-                        <td><span className="status-badge">Open</span></td>
+                        <td><span className="status-badge">{item.status || item.investigation_status || '—'}</span></td>
                         <td>{formatCreatedAt(item.created_at)}</td>
+                        <td><button className="table-action" type="button" onClick={() => openInvestigation(item.id)}>Open Investigation</button></td>
                       </tr>
                     ))}
                   </tbody>
