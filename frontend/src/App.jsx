@@ -112,6 +112,18 @@ const formatMatchDetails = (matches) => {
     .join(' • ')
 }
 
+const formatGraphIdentifier = (node) => {
+  if (node?.identifier || node?.label) return formatValue(node.identifier || node.label)
+  return node?.id === undefined ? 'Unknown record' : `Record ${node.id}`
+}
+
+const formatGraphType = (node) => String(node?.type || 'entity').replace(/_/g, ' ')
+
+const shortenGraphValue = (value) => {
+  const text = formatValue(value)
+  return text.length > 22 ? `${text.slice(0, 10)}•••${text.slice(-8)}` : text
+}
+
 function App() {
   const [entryScreen, setEntryScreen] = useState('landing')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -149,6 +161,8 @@ function App() {
   const [analysisError, setAnalysisError] = useState('')
   const [analysisResult, setAnalysisResult] = useState(null)
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState(null)
+  const [hoveredGraphEdge, setHoveredGraphEdge] = useState(null)
+  const [graphSearch, setGraphSearch] = useState('')
   const [graphZoom, setGraphZoom] = useState(1)
   const [reportExportError, setReportExportError] = useState('')
   const [currentDateLabel] = useState(() => (
@@ -163,6 +177,14 @@ function App() {
     event.preventDefault()
     if (!authForm.email.trim() || !authForm.password.trim() || (authMode === 'signup' && !authForm.name.trim())) {
       setAuthError('Please complete all required fields.')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authForm.email.trim())) {
+      setAuthError('Enter a valid work email address.')
+      return
+    }
+    if (authForm.password.length < 8) {
+      setAuthError('Password must be at least 8 characters.')
       return
     }
     setAuthError('')
@@ -313,15 +335,20 @@ function App() {
           <div className="auth-card">
             <button className="back-to-site" type="button" onClick={() => setEntryScreen('landing')}>← Back to TraceNova</button>
             <p className="section-kicker">Secure investigator portal</p>
-            <h2>{authMode === 'login' ? 'Investigator access' : 'Create local workspace'}</h2>
-            <p className="auth-subtitle">{authMode === 'login' ? 'Sign in to access your investigation workspace.' : 'Set up your local analyst workspace to continue.'}</p>
+            <h2>{authMode === 'login' ? 'Sign in to TraceNova' : 'Create your workspace'}</h2>
+            <p className="auth-subtitle">{authMode === 'login' ? 'Access the investigation workspace from this browser.' : 'Create a local workspace profile to continue.'}</p>
             <form onSubmit={handleAuthSubmit} className="auth-form">
-              {authMode === 'signup' && <label>Full name<input value={authForm.name} onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })} placeholder="Your name" /></label>}
-              <label>Work email<input type="email" value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} placeholder="analyst@organization.com" /></label>
-              <label>Password<input type="password" value={authForm.password} onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })} placeholder="••••••••" /></label>
+              {authMode === 'signup' && <label>Full name<input autoComplete="name" value={authForm.name} onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })} placeholder="Your name" /></label>}
+              <label>Work email<input autoComplete="email" type="email" value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} placeholder="analyst@organization.com" /></label>
+              <label>Password<input autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} minLength="8" type="password" value={authForm.password} onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })} placeholder="8+ characters" /></label>
               {authError && <p className="form-error" role="alert">{authError}</p>}
-              <button className="primary-button auth-submit" type="submit">{authMode === 'login' ? 'Enter workspace' : 'Create workspace'} <span>→</span></button>
+              <button className="primary-button auth-submit" type="submit">{authMode === 'login' ? 'Sign in' : 'Create account'} <span>→</span></button>
             </form>
+            <div className="auth-divider"><span>or</span></div>
+            <button className="google-auth-button" type="button" onClick={() => setAuthError('Google sign-in is not configured for this deployment.')}>
+              <span className="google-mark" aria-hidden="true">G</span> Continue with Google
+            </button>
+            <p className="auth-provider-note">Google OAuth is ready for provider wiring, but is not enabled.</p>
             <p className="auth-switch">{authMode === 'login' ? 'New to TraceNova?' : 'Already have access?'}<button type="button" onClick={() => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setAuthError('') }}>{authMode === 'login' ? 'Create account' : 'Sign in'}</button></p>
             <small className="auth-disclaimer">Local workspace access • Backend authentication is not configured</small>
           </div>
@@ -1206,16 +1233,25 @@ function App() {
                           const selectedConnections = selectedGraphNodeId
                             ? graphLayout.edges.filter((edge) => String(edge.source) === selectedGraphNodeId || String(edge.target) === selectedGraphNodeId).length
                             : 0
+                          const normalizedSearch = graphSearch.trim().toLowerCase()
+                          const matchingNodeIds = new Set(graphLayout.nodes
+                            .filter((node) => `${formatGraphIdentifier(node)} ${formatGraphType(node)}`.toLowerCase().includes(normalizedSearch))
+                            .map((node) => String(node.id)))
+                          const selectedEdges = selectedGraphNodeId
+                            ? graphLayout.edges.filter((edge) => String(edge.source) === selectedGraphNodeId || String(edge.target) === selectedGraphNodeId)
+                            : []
                           return (
                             <>
+                        <div className="graph-summary-grid">
+                          <span><small>Records</small><strong>{graphLayout.nodes.length}</strong></span>
+                          <span><small>Relationships</small><strong>{graphLayout.edges.length}</strong></span>
+                          {nodeTypes.map((type) => <span key={`summary-${type}`}><small>{formatGraphType({ type })}</small><strong>{graphLayout.nodes.filter((node) => node.type === type).length}</strong></span>)}
+                        </div>
                         <div className="graph-meta-row">
                           <div className="graph-legend">
-                            {nodeTypes.map((type) => <span key={type}><i />{type}</span>)}
+                            {nodeTypes.map((type) => <span key={type}><i className={`legend-${String(type).toLowerCase()}`} />{formatGraphType({ type })}</span>)}
                           </div>
-                          {selectedNode && <div className="graph-selection">
-                            <strong>{formatValue(selectedNode.identifier || selectedNode.label || selectedNode.id)}</strong>
-                            <span>{formatValue(selectedNode.type, 'entity')} · {selectedConnections} connection{selectedConnections === 1 ? '' : 's'}</span>
-                          </div>}
+                          <label className="graph-search">Search returned records<input value={graphSearch} onChange={(event) => setGraphSearch(event.target.value)} placeholder="Record or type" /></label>
                         </div>
                         <div className="graph-canvas" aria-label="Investigation graph">
                           <svg
@@ -1244,15 +1280,19 @@ function App() {
                                   return null
                                 }
                                 return (
-                                  <line
+                                  <g
                                     key={`${edge.source}-${edge.target}-${index}`}
-                                    className={selectedGraphNodeId && String(edge.source) !== selectedGraphNodeId && String(edge.target) !== selectedGraphNodeId ? 'is-dimmed' : ''}
-                                    x1={source.x}
-                                    y1={source.y}
-                                    x2={target.x}
-                                    y2={target.y}
-                                    markerEnd="url(#graph-arrow)"
-                                  />
+                                    className={`graph-edge-group ${hoveredGraphEdge === index ? 'is-hovered' : ''} ${selectedGraphNodeId && String(edge.source) !== selectedGraphNodeId && String(edge.target) !== selectedGraphNodeId ? 'is-dimmed' : ''}`}
+                                    onMouseEnter={() => setHoveredGraphEdge(index)}
+                                    onMouseLeave={() => setHoveredGraphEdge(null)}
+                                    onClick={() => setHoveredGraphEdge(index)}
+                                    role="button"
+                                    tabIndex="0"
+                                    aria-label={`${formatGraphType({ type: edge.entity_type })} relationship, ${formatGraphIdentifier(graphLayout.nodes.find((node) => String(node.id) === String(edge.source)))} to ${formatGraphIdentifier(graphLayout.nodes.find((node) => String(node.id) === String(edge.target)))}`}
+                                  >
+                                    <line x1={source.x} y1={source.y} x2={target.x} y2={target.y} markerEnd="url(#graph-arrow)" />
+                                    <text className="graph-edge-label" x={(source.x + target.x) / 2} y={(source.y + target.y) / 2 - 6}>{formatGraphType({ type: edge.entity_type })}</text>
+                                  </g>
                                 )
                               })}
                             </g>
@@ -1264,20 +1304,19 @@ function App() {
                                 const isConnected = connectedToSelected.has(nodeId)
                                 return (
                                   <g
-                                    className={`graph-node ${isSelected ? 'is-selected' : ''} ${selectedGraphNodeId && !isSelected && !isConnected ? 'is-dimmed' : ''}`}
+                                    className={`graph-node ${isSelected ? 'is-selected' : ''} ${normalizedSearch && !matchingNodeIds.has(nodeId) ? 'is-search-dimmed' : ''} ${selectedGraphNodeId && !isSelected && !isConnected ? 'is-dimmed' : ''}`}
                                     key={nodeId}
                                     transform={`translate(${position.x} ${position.y})`}
-                                    onMouseEnter={() => setSelectedGraphNodeId(nodeId)}
                                     onFocus={() => setSelectedGraphNodeId(nodeId)}
                                     onClick={() => setSelectedGraphNodeId((current) => current === nodeId ? null : nodeId)}
                                     tabIndex="0"
                                     role="button"
                                     aria-label={`${node.type || 'entity'} ${node.identifier || node.label || node.id}`}
                                   >
-                                    <circle r={isSelected ? 21 : 18} />
-                                    <text y="-27">{formatValue(node.type, 'entity')}</text>
-                                    <text className="graph-node-label" y="34">{formatValue(node.identifier || node.label || node.id)}</text>
-                                    <title>{`${node.type || 'node'} ${node.identifier || node.label || node.id}`}</title>
+                                    <circle r={isSelected ? 23 : 19} />
+                                    <text className="graph-node-type" y="-29">{formatGraphType(node)}</text>
+                                    <text className="graph-node-label" y="36">{shortenGraphValue(formatGraphIdentifier(node))}</text>
+                                    <title>{`${formatGraphType(node)}: ${formatGraphIdentifier(node)}`}</title>
                                   </g>
                                 )
                               })}
@@ -1285,6 +1324,22 @@ function App() {
                             </g>
                           </svg>
                         </div>
+                        {selectedNode && <aside className="graph-entity-panel">
+                          <div>
+                            <p className="section-kicker">Selected returned entity</p>
+                            <h4>{formatGraphIdentifier(selectedNode)}</h4>
+                            <span className="entity-type-badge">{formatGraphType(selectedNode)}</span>
+                          </div>
+                          <div className="graph-entity-facts"><span><small>Relationship count</small><strong>{selectedConnections}</strong></span><span><small>Backend value</small><strong>{formatGraphIdentifier(selectedNode)}</strong></span></div>
+                          <div className="graph-related-list">
+                            <small>Connected records</small>
+                            {!selectedEdges.length ? <span>No relationships returned.</span> : selectedEdges.map((edge, index) => {
+                              const relatedId = String(edge.source) === selectedGraphNodeId ? edge.target : edge.source
+                              const relatedNode = graphLayout.nodes.find((node) => String(node.id) === String(relatedId))
+                              return <span key={`${relatedId}-${index}`}><b>{formatGraphType({ type: edge.entity_type })}</b> · {formatGraphIdentifier(relatedNode)} <em>{shortenGraphValue(edge.value)}</em></span>
+                            })}
+                          </div>
+                        </aside>}
                             </>
                           )
                     })()}
