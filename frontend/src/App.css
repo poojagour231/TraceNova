@@ -2238,6 +2238,257 @@ body {
   color: #68788c;
 }
 
+/* Blue, white and black command-center treatment */
+:root {
+  --canvas: #f4f7fb;
+  --sidebar: #080d18;
+  --panel: #ffffff;
+  --panel-raised: #f8fafc;
+  --line: #d9e1ec;
+  --line-strong: #b9c7d9;
+  --text: #0b1220;
+  --muted: #516174;
+  --faint: #738196;
+  --primary: #2563eb;
+  --primary-strong: #1d4ed8;
+  --cyan: #2563eb;
+  --violet: #2563eb;
+  --orange: #2563eb;
+  --green: #2563eb;
+}
+
+.landing-page {
+  color: #0b1220;
+  background:
+    radial-gradient(circle at 82% 10%, rgba(37, 99, 235, .14), transparent 32rem),
+    #f4f7fb;
+}
+
+.landing-login {
+  border-color: #2563eb;
+  color: #1d4ed8;
+  background: #ffffff;
+}
+
+.landing-login:hover {
+  border-color: #1d4ed8;
+  color: #ffffff;
+  background: #2563eb;
+}
+
+.network-core {
+  border: 2px solid #2563eb;
+  color: #ffffff;
+  background: #0b1220;
+  box-shadow:
+    0 0 0 10px rgba(37, 99, 235, .12),
+    0 18px 45px rgba(37, 99, 235, .2);
+}
+
+.network-core small {
+  color: #bfdbfe;
+}
+
+.network-orbit,
+.orbit-two {
+  border-color: rgba(37, 99, 235, .28);
+}
+
+.network-node {
+  border-color: #b9c7d9;
+  color: #1d4ed8;
+  background: #ffffff;
+}
+
+.landing-hero h1 span,
+.landing-secondary span,
+.landing-footer strong span {
+  color: #2563eb;
+}
+
+.app-shell {
+  color: #0b1220;
+  background: #0b1220;
+}
+
+.app-shell .sidebar {
+  background: #080d18;
+  box-shadow: 10px 0 28px rgba(2, 8, 23, .18);
+}
+
+.app-shell .sidebar .nav-item {
+  color: #aab7ca;
+}
+
+.app-shell .sidebar .nav-icon {
+  color: #93b4f8;
+}
+
+.app-shell .sidebar .nav-item:hover {
+  color: #ffffff;
+  background: #111c31;
+}
+
+.app-shell .sidebar .nav-item.active {
+  color: #ffffff;
+  border-color: rgba(96, 165, 250, .35);
+  background: #172a4a;
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+.app-shell .sidebar .active-dot,
+.sidebar-footer-dot,
+.live-label span {
+  background: #3b82f6;
+}
+
+.app-shell .topbar {
+  border-bottom-color: #d9e1ec;
+  background: #ffffff;
+}
+
+.app-shell .topbar h1,
+.welcome-row h2,
+.panel-heading h3,
+.case-table td strong,
+.result-panel h4,
+.report-header h3,
+.modal-heading h2 {
+  color: #0b1220;
+}
+
+.content {
+  background: #f4f7fb;
+}
+
+.investigation-stepper,
+.panel,
+.overview-card {
+  border-color: #d9e1ec;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(11, 18, 32, .07);
+}
+
+.workflow-step.active {
+  color: #0b1220;
+}
+
+.workflow-step.active .workflow-step-number,
+.workflow-step.complete .workflow-step-number {
+  border-color: #2563eb;
+  background: #2563eb;
+}
+
+.overview-card {
+  border-top-color: #2563eb;
+}
+
+.card-label,
+.section-description,
+.case-table td,
+.data-table td {
+  color: #516174;
+}
+
+.card-value,
+.card-icon,
+.summary-grid strong,
+.report-breakdown strong,
+.graph-metrics strong,
+.single-metric strong,
+.text-button,
+.app-shell .live-label,
+.app-shell .case-id {
+  color: #2563eb;
+}
+
+.primary-button,
+.table-action {
+  border-color: #2563eb;
+  background: #2563eb;
+  box-shadow: 0 7px 16px rgba(37, 99, 235, .2);
+}
+
+.primary-button:hover:not(:disabled),
+.table-action:hover,
+.primary-button:focus-visible,
+.table-action:focus-visible {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+}
+
+.secondary-button {
+  border-color: #b9c7d9;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.secondary-button:hover:not(:disabled) {
+  border-color: #60a5fa;
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.case-table-wrap,
+.data-table-wrap,
+.evidence-context-grid span,
+.summary-grid div,
+.report-metrics div {
+  border-color: #d9e1ec;
+  background: #f8fafc;
+}
+
+.case-table th,
+.data-table th {
+  color: #516174;
+  background: #eef3f9;
+}
+
+.case-table td,
+.data-table td {
+  border-top-color: #e5ebf3;
+}
+
+.risk-ring {
+  --ring-color: #2563eb;
+}
+
+.ml-ring {
+  --ring-color: #1d4ed8;
+}
+
+.graph-canvas {
+  border-color: #cbd7e6;
+  background:
+    linear-gradient(#e2e8f0 1px, transparent 1px),
+    linear-gradient(90deg, #e2e8f0 1px, transparent 1px),
+    #f8fafc;
+}
+
+.graph-edges line,
+.graph-edges marker path {
+  stroke: #2563eb;
+  fill: #2563eb;
+}
+
+.graph-nodes circle {
+  stroke: #2563eb;
+}
+
+.graph-nodes g.is-selected circle {
+  fill: #dbeafe;
+  stroke: #1d4ed8;
+}
+
+.graph-nodes .graph-node-label {
+  fill: #0b1220;
+}
+
+.graph-selection {
+  border-left-color: #2563eb;
+  background: #eff6ff;
+}
+
 .landing-login {
   border-color: #bdc9d8;
   color: #405474;
