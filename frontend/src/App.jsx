@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 
 const navigation = [
-  { label: 'Home', icon: '⌂' },
   { label: 'Dashboard', icon: '⌂' },
   { label: 'Cases', icon: '◫' },
   { label: 'Evidence', icon: '◈' },
@@ -1349,13 +1348,13 @@ function App() {
           <section className="welcome-row">
             <div>
               <p className="section-kicker">Command dashboard</p>
-              <h2>Investigation Workspace</h2>
+              <h2>Investigation Dashboard</h2>
               <p className="section-description">
-                Review active cases and move from evidence intake to defensible findings.
+                Monitor investigations, evidence and threat analysis from one workspace.
               </p>
             </div>
             <button className="primary-button" type="button" onClick={handleCreateCase}>
-              <span>＋</span> Create Case
+              <span>＋</span> Create New Case
             </button>
           </section>
           {activeCase && (
@@ -1403,7 +1402,7 @@ function App() {
                   <h3>Recent Cases</h3>
                 </div>
                 <button className="text-button" type="button" onClick={showCases}>
-                  View all <span>→</span>
+                  View All Cases <span>→</span>
                 </button>
               </div>
               <div className="case-table-wrap">
