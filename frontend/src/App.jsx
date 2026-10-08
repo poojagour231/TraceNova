@@ -10,6 +10,18 @@ const navigation = [
 ]
 
 const SELECTED_CASE_STORAGE_KEY = 'tracenova.selectedCaseId'
+const API_REQUEST_TIMEOUT_MS = 15000
+
+const fetchWithTimeout = async (url, options = {}) => {
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS)
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
+}
 
 const createGraphLayout = (graph) => {
   const nodes = Array.isArray(graph?.nodes) ? graph.nodes : []
@@ -192,11 +204,11 @@ function App() {
   }
 
   const loadCases = useCallback(async () => {
-      setCasesLoading(true)
-      setCasesError('')
+    setCasesLoading(true)
+    setCasesError('')
 
-      try {
-       const response = await fetch('https://tracenova.onrender.com/cases/')
+    try {
+        const response = await fetchWithTimeout('https://tracenova.onrender.com/cases/')
         if (!response.ok) {
           throw new Error('Unable to load cases')
         }
@@ -218,11 +230,13 @@ function App() {
           }
         })
         setCasesLoaded(true)
-      } catch {
-        setCasesError('Unable to load cases. Make sure the backend server is running.')
-      } finally {
-        setCasesLoading(false)
-      }
+    } catch (error) {
+      setCasesError(error.name === 'AbortError'
+        ? 'The backend took too long to respond. Please retry.'
+        : 'Unable to load cases. Please retry.')
+    } finally {
+      setCasesLoading(false)
+    }
   }, [])
 
   useEffect(() => {
