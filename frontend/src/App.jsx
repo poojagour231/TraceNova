@@ -397,6 +397,14 @@ function App() {
     setShowCreateForm(true)
   }
 
+  const handleStartEvidence = () => {
+    if (activeCase) {
+      setActiveNav('Evidence')
+      return
+    }
+    handleCreateCase()
+  }
+
   const closeCreateForm = () => {
     if (isCreating) {
       return
@@ -1517,8 +1525,8 @@ function App() {
                   <div><strong>Run analysis</strong><small>Correlate risk and relationships</small></div>
                 </div>
               </div>
-              <button className="secondary-button" type="button" onClick={handleCreateCase}>
-                Start an investigation <span>→</span>
+              <button className="primary-button" type="button" onClick={handleStartEvidence}>
+                Start Evidence <span>→</span>
               </button>
             </article>
           </section>
